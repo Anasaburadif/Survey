@@ -75,13 +75,37 @@ textarea.s-txt:focus{border-color:var(--brand);}
     <div class="prog-track"><div class="prog-fill" id="prog-fill" style="width:25%"></div></div>
   </div>
 
-  <!-- Step 1 -->
+  <!-- Step 1: Contact Info -->
   <div class="s-step active" id="ss-1">
+    <div class="s-card">
+      <div class="s-tag tag-csat">معلوماتك · Your Info</div>
+      <p class="s-q">أدخل اسمك ورقم جوالك</p>
+      <p class="s-sub">Enter your name and mobile number</p>
+      <div class="branch-badge" id="branch-badge"></div>
+      <div style="margin-bottom:10px;">
+        <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:5px;">الاسم | Name</label>
+        <input type="text" id="cust-name" placeholder="اسمك الكريم | Your name"
+          style="width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-family:inherit;font-size:14px;outline:none;color:var(--text);"
+          oninput="chkContact()">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:5px;">رقم الجوال | Mobile</label>
+        <input type="tel" id="cust-phone" placeholder="05xxxxxxxx"
+          style="width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-family:inherit;font-size:14px;outline:none;color:var(--text);direction:ltr;text-align:right;"
+          oninput="chkContact()">
+      </div>
+    </div>
+    <div class="s-nav">
+      <button class="btn-nxt" id="bn1" onclick="goS(2)" disabled>التالي ←</button>
+    </div>
+  </div>
+
+  <!-- Step 2: CSAT -->
+  <div class="s-step" id="ss-2-csat">
     <div class="s-card">
       <div class="s-tag tag-csat">رضا العملاء · CSAT</div>
       <p class="s-q">كيف تقيّم تجربتك معنا اليوم؟</p>
       <p class="s-sub">How would you rate your experience today?</p>
-      <div class="branch-badge" id="branch-badge"></div>
       <div class="stars-row" id="stars-row">
         <button class="star-b" data-v="5" onclick="selStar(5)">⭐</button>
         <button class="star-b" data-v="4" onclick="selStar(4)">⭐</button>
@@ -92,11 +116,12 @@ textarea.s-txt:focus{border-color:var(--brand);}
       <div class="scale-hint"><span>سيء جداً | Very Poor</span><span>ممتاز | Excellent</span></div>
     </div>
     <div class="s-nav">
-      <button class="btn-nxt" id="bn1" onclick="goS(2)" disabled>التالي ←</button>
+      <button class="btn-back" onclick="goS(1)">→ السابق</button>
+      <button class="btn-nxt" id="bn2-csat" onclick="goS(3)" disabled>التالي ←</button>
     </div>
   </div>
 
-  <!-- Step 2 -->
+  <!-- Step 3: NPS -->
   <div class="s-step" id="ss-2">
     <div class="s-card">
       <div class="s-tag tag-nps">ترويج العملاء · NPS</div>
@@ -106,7 +131,7 @@ textarea.s-txt:focus{border-color:var(--brand);}
       <div class="scale-hint"><span>0 = لن أوصي | Won't recommend</span><span>10 = سأوصي | Definitely will</span></div>
     </div>
     <div class="s-nav">
-      <button class="btn-back" onclick="goS(1)">→ السابق</button>
+      <button class="btn-back" onclick="goS(2)">→ السابق</button>
       <button class="btn-nxt" id="bn2" onclick="goS(3)" disabled>التالي ←</button>
     </div>
   </div>
@@ -163,6 +188,20 @@ textarea.s-txt:focus{border-color:var(--brand);}
 const SHEETS_URL='https://script.google.com/macros/s/AKfycbwbEWmAJn5jM9ysRxi8Ap5h_Gfwn5JGy0QhSZS183sTxZ4uh-C7Q0K0JvTJ8axNozpsQA/exec';
 let curStep=1, ans={branch:'',csat:0,nps:-1,ces:0};
 
+// Contact check
+function chkContact(){
+  const name=document.getElementById('cust-name').value.trim();
+  const phone=document.getElementById('cust-phone').value.trim();
+  document.getElementById('bn1').disabled=!(name && phone.length>=10);
+}
+
+// Update selStar to enable correct button
+function selStarFixed(v){
+  ans.csat=v;
+  document.querySelectorAll('.star-b').forEach(b=>b.classList.toggle('lit',+b.dataset.v<=v));
+  document.getElementById('bn2-csat').disabled=false;
+}
+
 // NPS buttons
 const npsRow=document.getElementById('nps-row');
 for(let i=0;i<=10;i++){
@@ -186,7 +225,7 @@ for(let i=0;i<=10;i++){
 function selStar(v){
   ans.csat=v;
   document.querySelectorAll('.star-b').forEach(b=>b.classList.toggle('lit',+b.dataset.v<=v));
-  document.getElementById('bn1').disabled=!(ans.branch&&ans.csat>0);
+  document.getElementById('bn2-csat').disabled=false;
 }
 function selNPS(v){
   ans.nps=v;
@@ -202,15 +241,17 @@ function selEff(v){
 function goS(n){
   document.getElementById('ss-'+curStep).classList.remove('active');
   curStep=n;document.getElementById('ss-'+n).classList.add('active');
-  const pct=Math.round(n/4*100);
+  const pct=Math.round(n/5*100);
   document.getElementById('prog-fill').style.width=pct+'%';
   document.getElementById('prog-pct').textContent=pct+'%';
-  document.getElementById('prog-text').textContent='السؤال '+n+' من 4';
+  document.getElementById('prog-text').textContent='السؤال '+n+' من 5';
   window.scrollTo({top:0,behavior:'smooth'});
 }
 async function submitSurvey(){
   const comment=document.getElementById('comment').value;
-  fetch(SHEETS_URL,{method:'POST',body:JSON.stringify({branch:ans.branch,csat:ans.csat,nps:ans.nps,ces:ans.ces,comment,lang:'ar'})}).catch(()=>{});
+  const custName=document.getElementById('cust-name').value;
+  const custPhone=document.getElementById('cust-phone').value;
+  fetch(SHEETS_URL,{method:'POST',body:JSON.stringify({branch:ans.branch,csat:ans.csat,nps:ans.nps,ces:ans.ces,comment,lang:'ar',name:custName,phone:custPhone})}).catch(()=>{});
   document.getElementById('ss-'+curStep).classList.remove('active');
   document.getElementById('ss-thanks').classList.add('active');
   document.getElementById('prog-fill').style.width='100%';
@@ -228,9 +269,9 @@ function newSurvey(){
   document.getElementById('bn3').disabled=true;
   document.getElementById('ss-thanks').classList.remove('active');
   curStep=1;document.getElementById('ss-1').classList.add('active');
-  document.getElementById('prog-fill').style.width='25%';
-  document.getElementById('prog-pct').textContent='25%';
-  document.getElementById('prog-text').textContent='السؤال 1 من 4';
+  document.getElementById('prog-fill').style.width='20%';
+  document.getElementById('prog-pct').textContent='20%';
+  document.getElementById('prog-text').textContent='السؤال 1 من 5';
 }
 </script>
 </body>
