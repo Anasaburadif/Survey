@@ -486,6 +486,9 @@ async function submitSurvey(){
       rec.aiSentiment=JSON.parse(txt.replace(/```json|```/g,'').trim());
     }catch(e){ rec.aiSentiment=null; }
   }
+  // Send to Google Sheets
+  const SHEETS_URL='https://script.google.com/macros/s/AKfycbwbEWmAJn5jM9ysRxi8Ap5h_Gfwn5JGy0QhSZS183sTxZ4uh-C7Q0K0JvTJ8axNozpsQA/exec';
+  fetch(SHEETS_URL,{method:'POST',body:JSON.stringify({branch:rec.branch,csat:rec.csat,nps:rec.nps,ces:rec.ces,comment:rec.comment,lang:rec.lang})}).catch(()=>{});
   responses.unshift(rec);
   localStorage.setItem('cx_responses',JSON.stringify(responses));
   // Reset
