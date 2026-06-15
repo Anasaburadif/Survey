@@ -178,7 +178,7 @@ label{font-size:12px;color:var(--muted);display:block;margin-bottom:4px;}
 </div>
 
 <script>
-const SHEETS='https://script.google.com/macros/s/AKfycbxoCSr1WgRcykkxtBncw9U_9B8hJWA8o5Mbltl_JBblt6hzs49HTV4Eyhj2Ysc7vAu8wg/exec';
+const SHEETS='https://script.google.com/macros/s/AKfycbzgZ_3Vojzt3pLEhjrRFb0b2VQ6SpgE1qMkzkvHt1hpvSTS-GHg0UeuvqksdFGFxOyRzQ/exec';
 let cur=1, ans={branch:'',name:'',phone:'',csat:0,nps:-1,ces:0};
 
 // Auto-detect branch
@@ -229,9 +229,10 @@ function go(n){
 }
 function submit(){
   const comment=document.getElementById('comment').value;
+  const score = Math.round(((ans.csat/5)*40)+((ans.nps/10)*40)+((ans.ces/5)*20));
   fetch(SHEETS,{method:'POST',body:JSON.stringify({
     branch:ans.branch, csat:ans.csat, nps:ans.nps, ces:ans.ces,
-    comment, lang:'ar', name:ans.name, phone:ans.phone
+    comment, lang:'ar', name:ans.name, phone:ans.phone, score:score+'%'
   })}).catch(()=>{});
   document.getElementById('s'+cur).classList.remove('active');
   document.getElementById('s-thanks').classList.add('active');
