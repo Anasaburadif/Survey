@@ -185,14 +185,18 @@ async function fetchFromSheets(){
   try{
     const r=await fetch('https://script.google.com/macros/s/AKfycbyvnqbwYSCYwC9Ondi4g2wxHLbzUnJwwqN3c5Gt_5xELE5GfUUBwAW9pjQ_ci9yTJrRMg/exec');
     const data=await r.json();
-    const mapped=data.filter(d=>d.branch).map((d,i)=>({
-      id:i, ts:d.ts||new Date().toISOString(),
-      branch:d.branch, csat:Number(d.csat)||0,
-      nps:Number(d.nps)>=0?Number(d.nps):-1,
-      ces:Number(d.ces)||0,
-      comment:d.comment||'', lang:d.lang||'ar',
-      name:d.name||'', phone:d.phone||''
-    }));
+    const mapped=data.filter(d=>d.branch).map((d,i)=>{
+      const npsVal = d.nps !== undefined && d.nps !== null && d.nps !== '' ? Number(d.nps) : -1;
+      const csatVal = d.csat !== undefined && d.csat !== '' ? Number(d.csat) : 0;
+      const cesVal = d.ces !== undefined && d.ces !== '' ? Number(d.ces) : 0;
+      return {
+        id:i, ts:d.ts||new Date().toISOString(),
+        branch:String(d.branch), 
+        csat:csatVal, nps:npsVal, ces:cesVal,
+        comment:d.comment||'', lang:d.lang||'ar',
+        name:d.name||'', phone:d.phone||''
+      };
+    });
     responses=mapped;
     localStorage.setItem('cx_responses',JSON.stringify(responses));
     renderDash();
