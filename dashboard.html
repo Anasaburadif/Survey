@@ -201,7 +201,7 @@ const branches=['An Nafil','Takhassousi','Malqa','Sulimaniyah','Ar Rawdah','Al B
 
 async function fetchFromSheets(){
   try{
-    const r=await fetch('https://script.google.com/macros/s/AKfycbyvnqbwYSCYwC9Ondi4g2wxHLbzUnJwwqN3c5Gt_5xELE5GfUUBwAW9pjQ_ci9yTJrRMg/exec');
+    const r=await fetch('https://script.google.com/macros/s/AKfycbzgZ_3Vojzt3pLEhjrRFb0b2VQ6SpgE1qMkzkvHt1hpvSTS-GHg0UeuvqksdFGFxOyRzQ/exec');
     const data=await r.json();
     const mapped=data.filter(d=>d.branch).map((d,i)=>{
       const npsVal = d.nps !== undefined && d.nps !== null && d.nps !== '' ? Number(d.nps) : -1;
