@@ -90,6 +90,22 @@ tr:last-child td{border-bottom:none;}
 .empty{text-align:center;padding:32px;color:var(--muted);font-size:13px;}
 
 @media(max-width:600px){.kpi-grid{grid-template-columns:repeat(2,1fr);}.charts-row{grid-template-columns:1fr;}}
+
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;display:none;align-items:center;justify-content:center;padding:20px;}
+.modal-overlay.open{display:flex;}
+.modal-card{background:#fff;border-radius:var(--r);padding:28px;max-width:440px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,0.15);}
+.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;}
+.modal-title{font-size:16px;font-weight:600;}
+.modal-close{width:32px;height:32px;border-radius:50%;border:none;background:var(--bg);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;}
+.modal-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--bg);}
+.modal-row:last-child{border-bottom:none;}
+.modal-label{font-size:12px;color:var(--muted);}
+.modal-val{font-size:13px;font-weight:500;color:var(--text);}
+.modal-contact{display:flex;gap:8px;margin-top:16px;}
+.btn-call{flex:1;padding:10px;border:none;background:var(--green-lt);color:var(--green);border-radius:var(--r-sm);font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:5px;}
+.btn-wa{flex:1;padding:10px;border:none;background:#E8F5EE;color:#128C7E;border-radius:var(--r-sm);font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:5px;}
+.feed-item{cursor:pointer;transition:background .15s;}
+.feed-item:hover{background:#EEE;}
 </style>
 </head>
 <body>
@@ -139,6 +155,8 @@ tr:last-child td{border-bottom:none;}
         <option value="Dharat Laban">Dharat Laban</option>
       </select>
       <button class="btn-demo" onclick="fetchFromSheets()">🔄 تحديث من Sheets</button>
+      <input type="date" id="date-from" onchange="renderDash()" style="padding:7px 10px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-family:inherit;font-size:12px;color:var(--text);background:#fff;outline:none;">
+      <input type="date" id="date-to" onchange="renderDash()" style="padding:7px 10px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-family:inherit;font-size:12px;color:var(--text);background:#fff;outline:none;">
       
     </div>
   </div>
@@ -206,7 +224,17 @@ async function fetchFromSheets(){
 function checkPwd(){ }
 function logout(){ document.getElementById('dash-screen').style.display='none'; document.getElementById('login-screen').style.display='block'; document.getElementById('pwd-input').value=''; }
 
-function getFiltered(){ const f=document.getElementById('branch-filter').value; return f==='all'?responses:responses.filter(r=>r.branch===f); }
+function getFiltered(){
+  const f=document.getElementById('branch-filter').value;
+  const from=document.getElementById('date-from').value;
+  const to=document.getElementById('date-to').value;
+  return responses.filter(r=>{
+    if(f!=='all' && r.branch!==f) return false;
+    if(from && new Date(r.ts)<new Date(from)) return false;
+    if(to && new Date(r.ts)>new Date(to+'T23:59:59')) return false;
+    return true;
+  });
+}
 function calcNPS(r){ if(!r.length)return null; const p=r.filter(x=>x.nps>=9).length,d=r.filter(x=>x.nps<=6&&x.nps>=0).length; return Math.round((p/r.length-d/r.length)*100); }
 function avg(r,k){ return r.length?+(r.reduce((s,x)=>s+x[k],0)/r.length).toFixed(1):null; }
 
@@ -249,7 +277,7 @@ function renderDash(){
   document.getElementById('feed-sub').textContent='— آخر '+Math.min(data.length,15)+' تقييم';
   data.slice(0,15).forEach(r=>{
     const d=new Date(r.ts),t=d.toLocaleString('ar-SA',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
-    feed.innerHTML+=`<div class="feed-item"><div class="feed-top"><span class="feed-branch">${r.branch||'غير محدد'}</span><span class="feed-time">${t}</span></div><div class="feed-scores"><span class="fs fs-nps">NPS ${r.nps>=0?r.nps:'—'}</span><span class="fs fs-csat">CSAT ${'⭐'.repeat(r.csat)}</span><span class="fs fs-ces">CES ${r.ces}/5</span></div>${r.comment?'<div class="feed-comment">"'+r.comment+'"</div>':''}</div>`;
+    feed.innerHTML+=`<div class="feed-item" onclick='showCustomer(${JSON.stringify(r).replace(/"/g,"&quot;")})' style="cursor:pointer;"><div class="feed-top"><span class="feed-branch">${r.branch||'غير محدد'}</span><span class="feed-time">${t}</span></div><div class="feed-scores"><span class="fs fs-nps">NPS ${r.nps>=0?r.nps:'—'}</span><span class="fs fs-csat">CSAT ${'⭐'.repeat(r.csat)}</span><span class="fs fs-ces">CES ${r.ces}/5</span></div>${r.comment?'<div class="feed-comment">"'+r.comment+'"</div>':''}</div>`;
   });
 }
 
@@ -268,5 +296,27 @@ function loadDemo(){
 }
 
 </script>
+
+<!-- Customer Modal -->
+<div class="modal-overlay" id="cust-modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal-card">
+    <div class="modal-header">
+      <div class="modal-title">بيانات العميل</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-row"><span class="modal-label">الاسم</span><span class="modal-val" id="m-name">—</span></div>
+    <div class="modal-row"><span class="modal-label">رقم الجوال</span><span class="modal-val" id="m-phone">—</span></div>
+    <div class="modal-row"><span class="modal-label">الفرع</span><span class="modal-val" id="m-branch">—</span></div>
+    <div class="modal-row"><span class="modal-label">التاريخ</span><span class="modal-val" id="m-date">—</span></div>
+    <div class="modal-row"><span class="modal-label">CSAT</span><span class="modal-val" id="m-csat">—</span></div>
+    <div class="modal-row"><span class="modal-label">NPS</span><span class="modal-val" id="m-nps">—</span></div>
+    <div class="modal-row"><span class="modal-label">CES</span><span class="modal-val" id="m-ces">—</span></div>
+    <div class="modal-row" id="m-comment-row"><span class="modal-label">الملاحظة</span><span class="modal-val" id="m-comment">—</span></div>
+    <div class="modal-contact">
+      <a id="m-call-btn" href="#" class="btn-call">📞 اتصال</a>
+      <a id="m-wa-btn" href="#" class="btn-wa">💬 واتساب</a>
+    </div>
+  </div>
+</div>
 </body>
 </html>
