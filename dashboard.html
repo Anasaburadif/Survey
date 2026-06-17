@@ -4,7 +4,29 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>جاناش — داشبورد رضا العملاء</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js">
+function showCustomer(idx){
+  const r=window._feedItems[idx];
+  if(!r){return;}
+  document.getElementById('m-name').textContent=r.name||'غير محدد';
+  document.getElementById('m-phone').textContent=r.phone||'غير محدد';
+  document.getElementById('m-branch').textContent=r.branch||'—';
+  var d=new Date(r.ts);
+  document.getElementById('m-date').textContent=d.toLocaleString('ar-SA',{year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+  document.getElementById('m-csat').textContent='⭐'.repeat(r.csat||0)+' ('+r.csat+'/5)';
+  document.getElementById('m-nps').textContent=r.nps>=0?r.nps+'/10':'—';
+  document.getElementById('m-ces').textContent=(r.ces||0)+'/5';
+  document.getElementById('m-score').textContent=r.score||'—';
+  document.getElementById('m-comment').textContent=r.comment||'لا توجد ملاحظات';
+  var phone=(r.phone||'').replace(/[^0-9]/g,'');
+  document.getElementById('m-call-btn').href=phone?'tel:'+phone:'#';
+  document.getElementById('m-wa-btn').href=phone?'https://wa.me/966'+phone.replace(/^0/,''):'#';
+  document.getElementById('cust-modal').classList.add('open');
+}
+function closeModal(){
+  document.getElementById('cust-modal').classList.remove('open');
+}
+</script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap');
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
@@ -275,9 +297,9 @@ function renderDash(){
   const feed=document.getElementById('feed-list');feed.innerHTML='';
   if(!data.length){feed.innerHTML='<div class="empty">لا توجد تقييمات بعد</div>';return;}
   document.getElementById('feed-sub').textContent='— آخر '+Math.min(data.length,15)+' تقييم';
-  data.slice(0,15).forEach(r=>{
+  window._feedItems=data.slice(0,15); window._feedItems.forEach((r,idx)=>{
     const d=new Date(r.ts),t=d.toLocaleString('ar-SA',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
-    feed.innerHTML+=`<div class="feed-item" onclick='showCustomer(${JSON.stringify(r).replace(/"/g,"&quot;")})' style="cursor:pointer;"><div class="feed-top"><span class="feed-branch">${r.branch||'غير محدد'}</span><span class="feed-time">${t}</span></div><div class="feed-scores"><span class="fs fs-nps">NPS ${r.nps>=0?r.nps:'—'}</span><span class="fs fs-csat">CSAT ${'⭐'.repeat(r.csat)}</span><span class="fs fs-ces">CES ${r.ces}/5</span></div>${r.comment?'<div class="feed-comment">"'+r.comment+'"</div>':''}</div>`;
+    feed.innerHTML+=`<div class="feed-item" onclick="showCustomer(${idx})" style="cursor:pointer;"><div class="feed-top"><span class="feed-branch">${r.branch||'غير محدد'}</span><span class="feed-time">${t}</span></div><div class="feed-scores"><span class="fs fs-nps">NPS ${r.nps>=0?r.nps:'—'}</span><span class="fs fs-csat">CSAT ${'⭐'.repeat(r.csat)}</span><span class="fs fs-ces">CES ${r.ces}/5</span></div>${r.comment?'<div class="feed-comment">"'+r.comment+'"</div>':''}</div>`;
   });
 }
 
